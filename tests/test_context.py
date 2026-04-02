@@ -13,7 +13,9 @@ from kubernetes.client.models.v1_secret import V1Secret
 
 from pycalrissian.context import CalrissianContext
 
-os.environ["KUBECONFIG"] = "~/.kube/kubeconfig-t2-dev.yaml"
+os.environ.setdefault("KUBECONFIG", os.path.expanduser("~/.kube/kubeconfig-t2-dev.yaml"))
+
+STORAGE_CLASS = os.getenv("STORAGE_CLASS", "standard")
 
 
 class TestCalrissianContext(unittest.TestCase):
@@ -21,7 +23,15 @@ class TestCalrissianContext(unittest.TestCase):
     def setUpClass(cls):
         logger.info(f"-----\n------------------------------  unit test for test_context.py   ------------------------------\n\n")
         cls.namespace = "dummy-namespace"
-    
+
+    @classmethod
+    def tearDownClass(cls):
+        session = CalrissianContext(
+            namespace=cls.namespace, storage_class="dummy", volume_size="1G"
+        )
+        if session.is_namespace_created():
+            session.dispose()
+
     def test_env(self):
 
         self.assertIsNotNone(os.getenv("KUBECONFIG", None))
@@ -49,10 +59,6 @@ class TestCalrissianContext(unittest.TestCase):
             namespace=self.namespace, storage_class="dummy", volume_size="1G"
         )
 
-        # if session.is_namespace_created():
-        #     session.core_v1_api.delete_namespace(
-        #         name=self.namespace, pretty=True
-        #     )
         response = session.create_namespace()
 
         self.assertIsNotNone(response)
@@ -119,7 +125,7 @@ class TestCalrissianContext(unittest.TestCase):
         logger.info(f"-----\n------------------------------  Testing volume {self.namespace}   ------------------------------\n\n")
         session = CalrissianContext(
             namespace=self.namespace,
-            storage_class="standard",
+            storage_class=STORAGE_CLASS,
             volume_size="1G",
         )
 
@@ -139,7 +145,7 @@ class TestCalrissianContext(unittest.TestCase):
         logger.info(f"-----\n------------------------------  Testing configmap {self.namespace}   ------------------------------\n\n")
         session = CalrissianContext(
             namespace=self.namespace,
-            storage_class="standard",
+            storage_class=STORAGE_CLASS,
             volume_size="1G",
         )
 
@@ -167,7 +173,7 @@ class TestCalrissianContext(unittest.TestCase):
         logger.info(f"-----\n------------------------------  Testing configmap {self.namespace}   ------------------------------\n\n")
         session = CalrissianContext(
             namespace=self.namespace,
-            storage_class="standard",
+            storage_class=STORAGE_CLASS,
             volume_size="1G",
         )
 
@@ -212,7 +218,7 @@ class TestCalrissianContext(unittest.TestCase):
 
         session = CalrissianContext(
             namespace=self.namespace,
-            storage_class="standard",
+            storage_class=STORAGE_CLASS,
             volume_size="1G",
             image_pull_secrets={"imagePullSecrets": secret_config},
         )
@@ -258,7 +264,3 @@ class TestCalrissianContext(unittest.TestCase):
         self.assertTrue(session.existing_namespace)
 
 
-# # if __name__ == "__main__":
-# #     import nose2
-
-# #     nose2.main()

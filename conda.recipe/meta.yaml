@@ -25,6 +25,6 @@ requirements:
 
 
 about:
-  home: https://github.com/terradue/pycalrissian
+  home: https://github.com/ZOO-Project/pycalrissian
   license: Apache
   summary: "Python client for Calrissian - CWL on kubernetes"

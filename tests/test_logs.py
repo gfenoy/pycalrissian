@@ -10,7 +10,9 @@ from pycalrissian.context import CalrissianContext
 from pycalrissian.execution import CalrissianExecution
 from pycalrissian.job import CalrissianJob
 
-os.environ["KUBECONFIG"] = "~/.kube/kubeconfig-t2-dev.yaml"
+os.environ.setdefault("KUBECONFIG", os.path.expanduser("~/.kube/kubeconfig-t2-dev.yaml"))
+
+STORAGE_CLASS = os.getenv("STORAGE_CLASS", "standard")
 
 
 def wait_for_pvc_bound(api, name, namespace, timeout=500):
@@ -31,12 +33,12 @@ class TestCalrissianExecutionLogs(unittest.TestCase):
         logger.info(
             f"-----\n------------------------------  unit test for test_logs.py   ------------------------------\n\n"
         )
-        cls.namespace = "job-namespace-unit-test"
+        cls.namespace = "job-namespace-logs"
 
-        username = "fabricebrito"
-        password = ""
-        email = "fabrice.brito@terradue.com"
-        registry = "https://index.docker.io/v1/"
+        username = os.getenv("TEST_REGISTRY_USERNAME", "")
+        password = os.getenv("TEST_REGISTRY_PASSWORD", "")
+        email = os.getenv("TEST_REGISTRY_EMAIL", "")
+        registry = os.getenv("TEST_REGISTRY_URL", "https://index.docker.io/v1/")
 
         auth = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode(
             "utf-8"
@@ -56,7 +58,7 @@ class TestCalrissianExecutionLogs(unittest.TestCase):
 
         session = CalrissianContext(
             namespace=cls.namespace,
-            storage_class="standard",
+            storage_class=STORAGE_CLASS,
             volume_size="10G",
             image_pull_secrets=secret_config,
         )
@@ -65,8 +67,10 @@ class TestCalrissianExecutionLogs(unittest.TestCase):
 
         cls.session = session
 
-    
-        
+    @classmethod
+    def tearDownClass(cls):
+        cls.session.dispose()
+
     #@unittest.skipIf(os.getenv("CI_TEST_SKIP") == "1", "Test is skipped via env variable")
     def test_job_tool_logs(self):
         logger.info(

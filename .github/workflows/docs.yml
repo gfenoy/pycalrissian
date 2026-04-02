@@ -11,24 +11,27 @@ on:
       - 'mkdocs.yml'
       - .github/**
 
+permissions:
+  contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout master
-        uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
           pip install hatch pdocs pyyaml
           hatch build
           pip install dist/*.whl
-          
+
       - name: update API docs
         run: |
           pdocs as_markdown --output_dir docs/api/ --exclude_source --overwrite pycalrissian

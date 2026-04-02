@@ -151,11 +151,8 @@ class CalrissianContext:
                     resources=resources,
                     api_groups=["*"],
                 )
-                # print(type(response))
-                # assert(isinstance(response, V1Role))
                 logger.info(f"create role binding for role {key}")
                 self.create_role_binding(name=value["role_binding"], role=key)
-                # assert(isinstance(response, V1RoleBinding))
         else:
             if not self.is_namespace_created():
                 logger.warning(f"Namespace '{self.namespace}' does not exist.")
@@ -189,7 +186,7 @@ class CalrissianContext:
                 "additionalImagePullSecrets" in self.image_pull_secrets
                 and self.image_pull_secrets["additionalImagePullSecrets"] is not None
             ):
-                logger.info(f"create secrets from existing ones")
+                logger.info("create secrets from existing ones")
                 self.create_additional_image_pull_secret(
                     self.image_pull_secrets["additionalImagePullSecrets"]
                 )
@@ -215,8 +212,6 @@ class CalrissianContext:
                 name=self.namespace, pretty=True, grace_period_seconds=0
             )
 
-            # if not self.retry(self.dispose):
-            #     raise ApiException()
             logger.info(f"namespace {self.namespace} deleted")
             return response
 
@@ -252,7 +247,7 @@ class CalrissianContext:
             config.load_kube_config(config_file=kubeconfig)
             api_client = client.ApiClient()
         elif kubeconfig_file:
-            config.load_kube_config(config_file=kubeconfig)
+            config.load_kube_config(config_file=kubeconfig_file)
             api_client = client.ApiClient()
         else:
             # if nothing is specified, kubernetes-python will use the file
@@ -401,9 +396,13 @@ class CalrissianContext:
         self,
         name: str,
         verbs: list,
-        resources: list = ["pods", "pods/log"],
-        api_groups: list = ["*"],
+        resources: list = None,
+        api_groups: list = None,
     ):
+        if resources is None:
+            resources = ["pods", "pods/log"]
+        if api_groups is None:
+            api_groups = ["*"]
 
         if self.is_role_created(name=name):
 
@@ -496,19 +495,6 @@ class CalrissianContext:
                 name=name, namespace=self.namespace
             )
 
-        # hard = {
-        #     "requests.cpu": "1",
-        #     "requests.memory": "512M",
-        #     "limits.cpu": "2",
-        #     "limits.memory": "512M",
-        #     "requests.storage": "1Gi",
-        #     "services.nodeports": "0",
-        # }
-
-        # hard.update(self.resource_quota)
-
-        # logger.info(f"resource quota hard: {hard}")
-
         metadata = client.V1ObjectMeta(name=name, namespace=self.namespace)
 
         spec = client.V1ResourceQuotaSpec(hard=self.resource_quota)
@@ -579,9 +565,13 @@ class CalrissianContext:
         name,
         key,
         content,
-        annotations: Dict = {},
-        labels: Dict = {},
+        annotations: Dict = None,
+        labels: Dict = None,
     ):
+        if annotations is None:
+            annotations = {}
+        if labels is None:
+            labels = {}
 
         if self.is_config_map_created(name=name):
 

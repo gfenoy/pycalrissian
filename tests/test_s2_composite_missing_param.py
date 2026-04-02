@@ -8,7 +8,9 @@ from pycalrissian.context import CalrissianContext
 from pycalrissian.execution import CalrissianExecution
 from pycalrissian.job import CalrissianJob
 
-os.environ["KUBECONFIG"] = "~/.kube/kubeconfig-t2-dev.yaml"
+os.environ.setdefault("KUBECONFIG", os.path.expanduser("~/.kube/kubeconfig-t2-dev.yaml"))
+
+STORAGE_CLASS = os.getenv("STORAGE_CLASS", "standard")
 
 def wait_for_pvc_bound(api, name, namespace, timeout=500):
     for t in range(timeout):
@@ -30,10 +32,10 @@ class TestCalrissianExecution(unittest.TestCase):
         )
         cls.namespace = "job-namespace"
 
-        username = "fabricebrito"
-        password = "1f54397c-f15c-4be4-b9ea-4220fb2d80ce"
-        email = "fabrice.brito@terradue.com"
-        registry = "https://index.docker.io/v1/"
+        username = os.getenv("TEST_REGISTRY_USERNAME", "")
+        password = os.getenv("TEST_REGISTRY_PASSWORD", "")
+        email = os.getenv("TEST_REGISTRY_EMAIL", "")
+        registry = os.getenv("TEST_REGISTRY_URL", "https://index.docker.io/v1/")
 
         auth = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode(
             "utf-8"
@@ -48,14 +50,14 @@ class TestCalrissianExecution(unittest.TestCase):
                     "auth": auth,
                 },
                 "registry.gitlab.com": {
-                    "auth": "Z2l0bGFiK2RlcGxveS10b2tlbi04NzY3OTQ6Vnc3Z1NpSHllaVlwLS0zUnEtc3o="  # noqa: E501
+                    "auth": os.getenv("TEST_GITLAB_AUTH", ""),
                 },
             }
         }
 
         session = CalrissianContext(
             namespace=cls.namespace,
-            storage_class="standard",
+            storage_class=STORAGE_CLASS,
             volume_size="10G",
             image_pull_secrets=secret_config,
         )

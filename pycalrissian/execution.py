@@ -57,6 +57,9 @@ class CalrissianExecution:
                 return JobStatus.FAILED
             return None
         except ApiException as e:
+            if e.status == 404:
+                logger.warning("Job not found (404), likely deleted by TTL")
+                return JobStatus.SUCCEEDED
             logger.error(f"Exception when calling get status: {e}\n")
             raise e
 
@@ -78,14 +81,14 @@ class CalrissianExecution:
 
     def get_output(self) -> Dict:
         """Returns the job output"""
-        if self.is_succeeded:
+        if self.is_succeeded():
             filename = self.get_file_from_volume(["output.json"])[0]
             with open(filename, "r") as staged_file:
                 return json.load(staged_file)
 
     def get_usage_report(self) -> Dict:
         """Returns the job usage report"""
-        if self.is_complete:
+        if self.is_complete():
             try:
                 filename = self.get_file_from_volume(["report.json"])[0]
                 with open(filename, "r") as staged_file:
@@ -122,7 +125,7 @@ class CalrissianExecution:
 
     def get_log(self):
         """Returns the job execution log"""
-        if self.is_complete:
+        if self.is_complete():
             return self._get_container_log(ContainerNames.CALRISSIAN)
         return None
 

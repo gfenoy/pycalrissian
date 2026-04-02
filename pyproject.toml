@@ -12,6 +12,7 @@ keywords = ["pycalrissian", "kubernetes"]
 license = "EUPL-1.0"
 authors = [
     { name = "Terradue", email = "fabrice.brito@terradue.com" },
+    { name = "ZOO-Project" },
 ]
 
 classifiers = [
@@ -34,7 +35,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Terradue/pycalrissian"
+Homepage = "https://github.com/ZOO-Project/pycalrissian"
 
 [tool.hatch.version]
 path = "pycalrissian/__about__.py"

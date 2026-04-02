@@ -10,7 +10,9 @@ import time
 from pycalrissian.context import CalrissianContext
 from pycalrissian.job import CalrissianJob
 
-os.environ["KUBECONFIG"] = "~/.kube/kubeconfig-t2-dev.yaml"
+os.environ.setdefault("KUBECONFIG", os.path.expanduser("~/.kube/kubeconfig-t2-dev.yaml"))
+
+STORAGE_CLASS = os.getenv("STORAGE_CLASS", "standard")
 
 def wait_for_pvc_bound(api, name, namespace, timeout=500):
     for t in range(timeout):
@@ -54,7 +56,7 @@ class TestCalrissianJob(unittest.TestCase):
 
         session = CalrissianContext(
             namespace=cls.namespace,
-            storage_class="standard",  # "microk8s-hostpath",
+            storage_class=STORAGE_CLASS,
             volume_size="10G",
             image_pull_secrets=secret_config,
         )
